@@ -62,10 +62,25 @@ gale_Img gale_load_img(gale_Filename filename) {
     return i;
 }
 
-gale_Img gale_save_img(gale_Img i, gale_Filename f) {
+int gale_save_img_as(gale_Img i, gale_Filename filename, gale_ImgFormat f) {
     int stride = i.w * i.c;
+    int quality = 0;
     int comp = 0;
-    stbi_write_png(f, i.w, i.h, i.c, i.d, stride);
+    switch (f) {
+    case gale_ImgFormat_JPG: return stbi_write_jpg(filename, i.w, i.h, i.c, i.d, quality);
+    case gale_ImgFormat_PNG: return stbi_write_png(filename, i.w, i.h, i.c, i.d, stride);
+    case gale_ImgFormat_BMP: return stbi_write_bmp(filename, i.w, i.h, i.c, i.d);
+    case gale_ImgFormat_TGA: return stbi_write_tga(filename, i.w, i.h, i.c, i.d);
+    /* case gale_ImgFormat_HDR: return stbi_write_hdr(filename, i.w, i.h, i.c, i.d); */
+    case gale_ImgFormat_PSD: return 0; // NOT SUPPORTED
+    case gale_ImgFormat_GIF: return 0; // NOT SUPPORTED
+    case gale_ImgFormat_PNM: return 0; // NOT SUPPORTED
+    }
+    return 0;
+}
+
+int gale_save_img(gale_Img i, gale_Filename f) {
+    return gale_save_img_as(i, f, i.f);
 }
 
 

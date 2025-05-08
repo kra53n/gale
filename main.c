@@ -8,5 +8,7 @@ int main() {
     const char *  filename_to_save = "sword_art_online.png";
     gale_Img img = gale_load_img(filename_to_load);
     gale_print_img_info(img);
-    gale_save_img(img, filename_to_save);
+    /* gale_save_img(img, filename_to_save); */
+    /* gale_save_img_as(img, filename_to_save, gale_ImgFormat_PNG); */
+    gale_save_img(img, "sao.jpg");
 }
