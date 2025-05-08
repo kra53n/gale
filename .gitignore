@@ -1,0 +1,7 @@
+*.out
+
+*.bmp
+*.png
+*.jpg
+
+stb*.h
