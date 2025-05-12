@@ -62,6 +62,10 @@ gale_Img gale_load_img(gale_Filename filename) {
     return i;
 }
 
+void gale_free_img(gale_Img i) {
+    STBI_FREE(i.d);
+}
+
 int gale_save_img_as(gale_Img i, gale_Filename filename, gale_ImgFormat f) {
     int stride = i.w * i.c;
     int quality = 0;
