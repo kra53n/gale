@@ -4,11 +4,15 @@
 int main() {
     gale_Filename img_name = "sword_art_online.jpg";
     gale_Img img = gale_load_img(img_name);
-	int x1 = 0;
-	int y1 = 0;
-	int x2 = img.w;
-	int y2 = img.h;
-    gale_Err err = gale_resize_img(&img, x1, y1, x2 * 0.5, y2);
+	/* int x1 = img.w * 0.2; */
+	/* int x2 = img.w * 0.8; */
+	/* int y1 = img.h * 0.2; */
+	/* int y2 = img.h * 0.8; */
+    int x1 = 400;
+    int x2 = 800;
+    int y1 = 400;
+    int y2 = 800;
+    gale_Err err = gale_crop_img(&img, x1, y1, x2, y2);
     if (err) {
         printf("Error occured while resizing the ");
         return 1;
