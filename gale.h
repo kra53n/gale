@@ -88,38 +88,20 @@ int gale_save_img(gale_Img i, gale_Filename f) {
     return gale_save_img_as(i, f, i.f);
 }
 
-gale_Err gale_resize_img(gale_Img *i, int x1, int y1, int x2, int y2) {
+gale_Err gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
     int new_w = x2 - x1;
     int new_h = y2 - y1;
 
-    int diff_x = i->w - new_w;
-    int diff_y = i->h - new_h;
-
-    int shifted_cursor = 0;
-    for (int cursor = 0; cursor < new_w * new_h * i->c; cursor++) {
-        i->d[cursor] = i->d[shifted_cursor];
-        shifted_cursor++;
-        if (shifted_cursor % (new_w * i->c) == 0) {
-            shifted_cursor += diff_x * i->c;
-        }
+    int offset_y = i->w * i->c * y1;
+    int shifted_cursor = offset_y + x1 * i->c;
+    int cursor = 0;
+    for (int y = 0; y < new_h; y++) {
+        int src_offset = ((y1 + y) * i->w + x1) * i->c;
+        int dst_offset = y * new_w * i->c;
+        memcpy(&i->d[dst_offset], &i->d[src_offset], new_w * i->c);
     }
-
-    printf("checkpoint\n");
-
-    /* for (int row = 0; row < new_h; row++) { */
-    /*     for (int col = 0; col < new_w; col++) { */
-    /*         for (int c = 0; c < i->c; c++) { */
-    /*             i->d[row * col] */
-    /*         } */
-    /*     } */
-    /* } */
-
     i->w = new_w;
     i->h = new_h;
-
-    /* gale_ImgData old = i->d; */
-    /* i->d = STBI_MALLOC(i->w * i->h * i->c); */
-
     return 0;
 }
 
