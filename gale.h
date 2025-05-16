@@ -10,6 +10,7 @@ typedef unsigned int gale_ImgSize;
 typedef unsigned char *  gale_ImgData;
 typedef const char *  gale_Filename;
 typedef int gale_ImgComp;
+typedef const char *  gale_Err;
 
 typedef enum {
     gale_ImgFormat_NotSupported,
@@ -85,6 +86,23 @@ int gale_save_img_as(gale_Img i, gale_Filename filename, gale_ImgFormat f) {
 
 int gale_save_img(gale_Img i, gale_Filename f) {
     return gale_save_img_as(i, f, i.f);
+}
+
+gale_Err gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
+    int new_w = x2 - x1;
+    int new_h = y2 - y1;
+
+    int offset_y = i->w * i->c * y1;
+    int shifted_cursor = offset_y + x1 * i->c;
+    int cursor = 0;
+    for (int y = 0; y < new_h; y++) {
+        int src_offset = ((y1 + y) * i->w + x1) * i->c;
+        int dst_offset = y * new_w * i->c;
+        memcpy(&i->d[dst_offset], &i->d[src_offset], new_w * i->c);
+    }
+    i->w = new_w;
+    i->h = new_h;
+    return 0;
 }
 
 
