@@ -10,7 +10,11 @@ typedef unsigned int gale_ImgSize;
 typedef unsigned char *  gale_ImgData;
 typedef const char *  gale_Filename;
 typedef int gale_ImgComp;
-typedef const char *  gale_Err;
+typedef char *  gale_Err;
+
+#define gale_PREFIX_ERROR "ERROR  "
+
+char gale_ERR_BUF[256] = {0};
 
 typedef enum {
     gale_ImgFormat_NotSupported,
@@ -30,6 +34,7 @@ typedef struct {
     gale_ImgData d;
     gale_ImgComp c;
     gale_ImgFormat f;
+    gale_Err err;
 } gale_Img;
 
 gale_ImgFormat gale__define_img_format(stbi__context *s) {
@@ -46,12 +51,18 @@ gale_ImgFormat gale__define_img_format(stbi__context *s) {
 
 gale_Img gale_load_img(gale_Filename filename) {
     FILE *f;
-    gale_Img i;
+    gale_Img i = {0};
     int req_comp = 0;
     stbi__context s;
 
     f = stbi__fopen(filename, "rb");
-    /* if (!f) // can't read this file */
+    if (!f) {
+        i.err = gale_ERR_BUF;
+        strcat(i.err, gale_PREFIX_ERROR"no file: ");
+        strcat(i.err, filename);
+        strcat(i.err, "\n");
+        return i;
+    }
 
     stbi__start_file(&s, f);
     i.f = gale__define_img_format(&s);
@@ -88,7 +99,7 @@ int gale_save_img(gale_Img i, gale_Filename f) {
     return gale_save_img_as(i, f, i.f);
 }
 
-gale_Err gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
+void gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
     int new_w = x2 - x1;
     int new_h = y2 - y1;
 
@@ -102,7 +113,6 @@ gale_Err gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
     }
     i->w = new_w;
     i->h = new_h;
-    return 0;
 }
 
 
