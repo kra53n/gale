@@ -8,6 +8,7 @@
 
 typedef unsigned int gale_ImgSize;
 typedef unsigned char *  gale_ImgData;
+typedef gale_ImgData gale_ImgBuf;
 typedef const char *  gale_Filename;
 typedef int gale_ImgComp;
 typedef char *  gale_Err;
@@ -32,6 +33,7 @@ typedef struct {
     gale_ImgSize w;
     gale_ImgSize h;
     gale_ImgData d;
+    gale_ImgBuf b;
     gale_ImgComp c;
     gale_ImgFormat f;
     gale_Err err;
@@ -62,7 +64,7 @@ gale_Img gale_load_img(gale_Filename filename) {
 
     f = stbi__fopen(filename, "rb");
     if (!f) {
-        i.err = gale_ERR_BUF;
+        gale_clean_err(&i);
         strcat(i.err, gale_PREFIX_ERROR"no file: ");
         strcat(i.err, filename);
         strcat(i.err, "\n");
@@ -76,11 +78,19 @@ gale_Img gale_load_img(gale_Filename filename) {
         fseek(f, - (int) (s.img_buffer_end - s.img_buffer), SEEK_CUR);
     }
 
+    i.b = (gale_ImgData)STBI_MALLOC(sizeof(unsigned char) * i.w * i.h * i.c);
+    if (!i.b) {
+        gale_clean_err(&i);
+        strcat(i.err, gale_PREFIX_ERROR"machine does not have enough memory\n");
+        return i;
+    }
+
     return i;
 }
 
 void gale_free_img(gale_Img i) {
     STBI_FREE(i.d);
+    STBI_FREE(i.b);
 }
 
 void gale_save_img_as(gale_Img *i, gale_Filename filename, gale_ImgFormat f) {
@@ -102,6 +112,7 @@ err:
     gale_clean_err(i);
     strcat(i->err, gale_PREFIX_ERROR"while trying to save a file as ");
     strcat(i->err, filename);
+    strcat(i->err, "\n");
 }
 
 void gale_save_img(gale_Img *i, gale_Filename f) {
@@ -124,10 +135,94 @@ void gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
     i->h = new_h;
 }
 
-/*
-void gale_rotate_img(gale_Img *i) {
+
+void gale_rotate_img_left(gale_Img *i) {
+    int size = i->w * i->h * i->c;
+    for (int y = 0; y < i->h; y++) {
+        for (int x = 0; x < i->w; x++) {
+            int new_x = y;
+            int new_y = (i->w - x - 1);
+            int src_pos = (y * i->w + x) * i->c;
+            int dst_pos = (new_y * i->h + new_x) * i->c;
+            for (int c = 0; c < i->c; c++) {
+                i->b[dst_pos+c] = i->d[src_pos+c];
+            }
+        }
+    }
+    {
+        int tmp = i->w;
+        i->w = i->h;
+        i->h = tmp;
+    }
+    {
+        gale_ImgData tmp;
+        tmp = i->d;
+        i->d = i->b;
+        i->b = tmp;
+    }
 }
-*/
+
+void gale_rotate_img_right(gale_Img *i) {
+    int size = i->w * i->h * i->c;
+    for (int y = 0; y < i->h; y++) {
+        for (int x = 0; x < i->w; x++) {
+            int new_x = (i->h - y - 1);
+            int new_y = x;
+            int src_pos = (y * i->w + x) * i->c;
+            int dst_pos = (new_y * i->h + new_x) * i->c;
+            for (int c = 0; c < i->c; c++) {
+                i->b[dst_pos+c] = i->d[src_pos+c];
+            }
+        }
+    }
+    {
+        int tmp = i->w;
+        i->w = i->h;
+        i->h = tmp;
+    }
+    {
+        gale_ImgData tmp;
+        tmp = i->d;
+        i->d = i->b;
+        i->b = tmp;
+    }
+}
+
+void gale_flip_img_horizontally(gale_Img *i) {
+    for (int y = 0; y < i->h; y++) {
+        for (int x = 0; x < i->w; x++) {
+            int src_pos = ((i->h - y - 1) * i->w + x) * i->c;
+            int dst_pos = (y * i->w + x) * i->c;
+            for (int c = 0; c < i->c; c++) {
+                i->b[dst_pos+c] = i->d[src_pos+c];
+            }
+        }
+    }
+    {
+        gale_ImgData tmp;
+        tmp = i->d;
+        i->d = i->b;
+        i->b = tmp;
+    }
+}
+
+void gale_flip_img_vertically(gale_Img *i) {
+    for (int y = 0; y < i->h; y++) {
+        for (int x = 0; x < i->w; x++) {
+            int src_pos = ((i->w - x - 1) + i->w * y) * i->c;
+            int dst_pos = (y * i->w + x) * i->c;
+            for (int c = 0; c < i->c; c++) {
+                i->b[dst_pos+c] = i->d[src_pos+c];
+            }
+        }
+    }
+    {
+        gale_ImgData tmp;
+        tmp = i->d;
+        i->d = i->b;
+        i->b = tmp;
+    }
+}
 
 #endif // GALE_INCLUDE_H
 

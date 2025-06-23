@@ -17,7 +17,10 @@ int main() {
         printf("%s\n", img.err);
         return 1;
     }
-    /* gale_rotate_img(&img); */
+    gale_rotate_img_right(&img);
+    gale_rotate_img_right(&img);
+    gale_flip_img_horizontally(&img);
+    gale_flip_img_vertically(&img);
     gale_save_img_as(&img, "sao.bmp", gale_ImgFormat_BMP);
     if (img.err) {
         printf("%s\n", img.err);
