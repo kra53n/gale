@@ -37,6 +37,11 @@ typedef struct {
     gale_Err err;
 } gale_Img;
 
+void gale_clean_err(gale_Img *i) {
+    *gale_ERR_BUF = 0;
+    i->err = gale_ERR_BUF;
+}
+
 gale_ImgFormat gale__define_img_format(stbi__context *s) {
     if (stbi__jpeg_test(s)) return gale_ImgFormat_JPG;
     if (stbi__png_test(s)) return gale_ImgFormat_PNG;
@@ -78,25 +83,29 @@ void gale_free_img(gale_Img i) {
     STBI_FREE(i.d);
 }
 
-int gale_save_img_as(gale_Img i, gale_Filename filename, gale_ImgFormat f) {
-    int stride = i.w * i.c;
+void gale_save_img_as(gale_Img *i, gale_Filename filename, gale_ImgFormat f) {
+    int stride = i->w * i->c;
     int quality = 0;
     int comp = 0;
     switch (f) {
-    case gale_ImgFormat_JPG: return stbi_write_jpg(filename, i.w, i.h, i.c, i.d, quality);
-    case gale_ImgFormat_PNG: return stbi_write_png(filename, i.w, i.h, i.c, i.d, stride);
-    case gale_ImgFormat_BMP: return stbi_write_bmp(filename, i.w, i.h, i.c, i.d);
-    case gale_ImgFormat_TGA: return stbi_write_tga(filename, i.w, i.h, i.c, i.d);
-    /* case gale_ImgFormat_HDR: return stbi_write_hdr(filename, i.w, i.h, i.c, i.d); */
-    case gale_ImgFormat_PSD: return 0; // NOT SUPPORTED
-    case gale_ImgFormat_GIF: return 0; // NOT SUPPORTED
-    case gale_ImgFormat_PNM: return 0; // NOT SUPPORTED
+    case gale_ImgFormat_JPG: if(stbi_write_jpg(filename, i->w, i->h, i->c, i->d, quality)) return; else goto err;
+    case gale_ImgFormat_PNG: if(stbi_write_png(filename, i->w, i->h, i->c, i->d, stride)) return; else goto err;
+    case gale_ImgFormat_BMP: if(stbi_write_bmp(filename, i->w, i->h, i->c, i->d)) return; else goto err;
+    case gale_ImgFormat_TGA: if(stbi_write_tga(filename, i->w, i->h, i->c, i->d)) return; else goto err;
+    /* case gale_ImgFormat_HDR: return stbi_write_hdr(filename, i->w, i->h, i->c, i->d); */
+    case gale_ImgFormat_PSD: return; // NOT SUPPORTED
+    case gale_ImgFormat_GIF: return; // NOT SUPPORTED
+    case gale_ImgFormat_PNM: return; // NOT SUPPORTED
     }
-    return 0;
+    return;
+err:
+    gale_clean_err(i);
+    strcat(i->err, gale_PREFIX_ERROR"while trying to save a file as ");
+    strcat(i->err, filename);
 }
 
-int gale_save_img(gale_Img i, gale_Filename f) {
-    return gale_save_img_as(i, f, i.f);
+void gale_save_img(gale_Img *i, gale_Filename f) {
+    return gale_save_img_as(i, f, i->f);
 }
 
 void gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
@@ -115,6 +124,10 @@ void gale_crop_img(gale_Img *i, int x1, int y1, int x2, int y2) {
     i->h = new_h;
 }
 
+/*
+void gale_rotate_img(gale_Img *i) {
+}
+*/
 
 #endif // GALE_INCLUDE_H
 

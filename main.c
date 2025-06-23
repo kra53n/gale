@@ -14,9 +14,14 @@ int main() {
     int y2 = img.h * 0.8;
     gale_crop_img(&img, x1, y1, x2, y2);
     if (img.err) {
-        printf("Error occured while resizing the ");
+        printf("%s\n", img.err);
         return 1;
     }
-    gale_save_img_as(img, "sao.bmp", gale_ImgFormat_BMP);
+    /* gale_rotate_img(&img); */
+    gale_save_img_as(&img, "sao.bmp", gale_ImgFormat_BMP);
+    if (img.err) {
+        printf("%s\n", img.err);
+        return 1;
+    }
     return 0;
 }
