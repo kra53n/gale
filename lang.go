@@ -1,7 +1,8 @@
 package main
 
 import (
-	_ "path/filepath"
+	_ "fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -9,11 +10,10 @@ import (
 // #cgo CFLAGS: -Ivendor
 // #cgo LDFLAGS: -lm
 // #include "gale.h"
-// import "C"
+import "C"
 
-var program string = `crop 10% 20%
-> imgs/картинк*
-> scan/imgs/here/*
+var program string = `rotate left
+> imgs/sao.bmp
 
 rotate left
 rotate right`
@@ -104,7 +104,10 @@ type Rule struct {
 
 var generalRules []Rule
 
-type Img string
+type Img struct {
+	path string
+	data C.gale_Img
+}
 
 type Block struct {
 	imgs  []Img
@@ -130,16 +133,21 @@ func (b *Block) applyRules() {
 		img.open()
 		img.applyRules(generalRules)
 		img.applyRules(b.rules)
+		img.save()
 		img.close()
 	}
 }
 
 func (i *Img) open() {
-
+	i.data = C.gale_load_img(C.CString(i.path))
 }
 
 func (i *Img) close() {
+	C.gale_free_img(i.data)
+}
 
+func (i *Img) save() {
+	C.gale_save_img(&i.data, C.CString(i.path))
 }
 
 func (i *Img) applyRules(rules []Rule) {
@@ -166,7 +174,7 @@ func (i *Img) crop(params CropParams) {
 }
 
 func (i *Img) rotateLeft() {
-
+	C.gale_rotate_img_left(&i.data)
 }
 
 func (i *Img) rotateRight() {
@@ -247,13 +255,9 @@ func parse() {
 				}
 				switch w.String() {
 				case "right":
-					rule = Rule{
-						kind: RotateRight,
-					}
+					rule = Rule{kind: RotateRight}
 				case "left":
-					rule = Rule{
-						kind: RotateLeft,
-					}
+					rule = Rule{kind: RotateLeft}
 				default:
 					panic("bad")
 				}
@@ -263,13 +267,9 @@ func parse() {
 				}
 				switch w.String() {
 				case "vertically":
-					rule = Rule{
-						kind: FlipVertically,
-					}
+					rule = Rule{kind: FlipVertically}
 				case "horizontally":
-					rule = Rule{
-						kind: FlipHorizontally,
-					}
+					rule = Rule{kind: FlipHorizontally}
 				default:
 					panic("bad")
 				}
@@ -285,7 +285,8 @@ func parse() {
 		case LexFilepathWord:
 			generalRulesWasScanned = true
 			if len(block.rules) == 0 {
-				block.imgs = append(block.imgs, Img(s))
+				// block.imgs = append(block.imgs, Img{path:s})
+				block.imgs = addImgsByPattern(block.imgs, s)
 			} else {
 				blocks = append(blocks, block)
 			}
@@ -300,6 +301,17 @@ func parse() {
 		}
 	}
 	blocks = append(blocks, block)
+}
+
+func addImgsByPattern(imgs []Img, pattern string) []Img {
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		panic("bad")
+	}
+	for _, m := range matches {
+		imgs = append(imgs, Img{path: m})
+	}
+	return imgs
 }
 
 func parseCrop(iter func() (LexWord, bool)) Rule {
