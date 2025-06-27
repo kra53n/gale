@@ -1,7 +1,8 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -12,11 +13,7 @@ import (
 // #include "gale.h"
 import "C"
 
-var program string = `rotate left
-> imgs/sao.bmp
-
-rotate left
-rotate right`
+var program string
 
 const (
 	ImgFormatNotSupported = iota
@@ -117,9 +114,27 @@ type Block struct {
 var blocks []Block
 
 func main() {
+	read()
 	lex()
 	parse()
 	exec()
+}
+
+func read() {
+	if len(os.Args) == 1 {
+		fmt.Println("path does not provided")
+		os.Exit(1)
+	}
+	if len(os.Args) > 2 {
+		fmt.Println("there is only one path is supported")
+		os.Exit(1)
+	}
+	bytes, err := os.ReadFile(os.Args[1])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	program = string(bytes)
 }
 
 func exec() {
@@ -178,15 +193,15 @@ func (i *Img) rotateLeft() {
 }
 
 func (i *Img) rotateRight() {
-
+	C.gale_rotate_img_right(&i.data)
 }
 
 func (i *Img) flipVertically() {
-
+	C.gale_flip_img_vertically(&i.data)
 }
 
 func (i *Img) flipHorizontally() {
-
+	C.gale_flip_img_horizontally(&i.data)
 }
 
 func lex() {
@@ -285,7 +300,6 @@ func parse() {
 		case LexFilepathWord:
 			generalRulesWasScanned = true
 			if len(block.rules) == 0 {
-				// block.imgs = append(block.imgs, Img{path:s})
 				block.imgs = addImgsByPattern(block.imgs, s)
 			} else {
 				blocks = append(blocks, block)
