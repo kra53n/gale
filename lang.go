@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	_ "path/filepath"
 	"strconv"
 	"strings"
@@ -122,19 +121,64 @@ func main() {
 
 func exec() {
 	for _, block := range blocks {
-		fmt.Println("exec", block)
 		block.applyRules()
 	}
 }
 
 func (b *Block) applyRules() {
 	for _, img := range b.imgs {
+		img.open()
 		img.applyRules(generalRules)
 		img.applyRules(b.rules)
+		img.close()
 	}
 }
 
-func (i Img) applyRules(rules []Rule) {
+func (i *Img) open() {
+
+}
+
+func (i *Img) close() {
+
+}
+
+func (i *Img) applyRules(rules []Rule) {
+	for _, r := range rules {
+		switch r.kind {
+		case Crop:
+			if params, ok := r.params.(CropParams); ok {
+				i.crop(params)
+			}
+		case RotateLeft:
+			i.rotateLeft()
+		case RotateRight:
+			i.rotateRight()
+		case FlipVertically:
+			i.flipVertically()
+		case FlipHorizontally:
+			i.flipHorizontally()
+		}
+	}
+}
+
+func (i *Img) crop(params CropParams) {
+
+}
+
+func (i *Img) rotateLeft() {
+
+}
+
+func (i *Img) rotateRight() {
+
+}
+
+func (i *Img) flipVertically() {
+
+}
+
+func (i *Img) flipHorizontally() {
+
 }
 
 func lex() {
