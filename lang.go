@@ -1,5 +1,8 @@
 package main
 
+// TODO
+// - add rights checking for writing
+
 import (
 	"fmt"
 	"os"
@@ -122,11 +125,12 @@ func main() {
 
 func read() {
 	if len(os.Args) == 1 {
-		fmt.Println("path does not provided")
+		fmt.Println("provide path to the file with instructions")
+		fmt.Println("    " + os.Args[0] + " pathtofile")
 		os.Exit(1)
 	}
 	if len(os.Args) > 2 {
-		fmt.Println("there is only one path is supported")
+		fmt.Println("only one path is currently supported")
 		os.Exit(1)
 	}
 	bytes, err := os.ReadFile(os.Args[1])
