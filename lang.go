@@ -185,7 +185,7 @@ func (i *Img) applyRules(rules []Rule) {
 }
 
 func (i *Img) crop(params CropParams) {
-
+	fmt.Println(params)
 }
 
 func (i *Img) rotateLeft() {
